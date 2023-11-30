@@ -14,7 +14,7 @@ input_file="$output_dir/day$day_formatted.txt"
 test_input_file="$output_dir/day${day_formatted}_test.txt"
 template_file="src/day01/Day01.kt"
 output_file="$output_dir/Day$day_formatted.kt"
-input_url="https://adventofcode.com/2022/day/$day/input"
+input_url="https://adventofcode.com/2023/day/$day/input"
 # The download is secured by a sessions cookie which is valid for about a month
 session_cookie="session_cookie.txt"
 
