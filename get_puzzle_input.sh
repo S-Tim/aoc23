@@ -52,8 +52,8 @@ if [[ ! -f "$output_dir/Day$day_formatted.kt" ]]; then
   echo "Creating template file for solution..."
   cp "$template_file" "$output_file"
   # Replace Day01 and day01 in the template file with the correct day
-  sed -i '' "s/Day01/Day$day_formatted/g" "$output_file"
-  sed -i '' "s/day01/day$day_formatted/g" "$output_file"
+  sed -i '' "s/Day00/Day$day_formatted/g" "$output_file"
+  sed -i '' "s/day00/day$day_formatted/g" "$output_file"
 else
   echo "Template file already exists..."
 fi
