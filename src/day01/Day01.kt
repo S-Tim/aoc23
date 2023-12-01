@@ -4,57 +4,40 @@ import println
 import readInput
 
 fun main() {
-    fun firstAndLastDigit(calibrationValue: String, replacementValues: List<Pair<String, Int>>): Int {
-        val firstNumberString =
-            replacementValues.map { it.second to calibrationValue.indexOf(it.first) }.filter { it.second != -1 }
-                .minBy { it.second }
-        val lastNumberString =
-            replacementValues.map { it.second to calibrationValue.lastIndexOf(it.first) }.filter { it.second != -1 }
-                .maxBy { it.second }
-
-        return Integer.parseInt(firstNumberString.first.toString() + lastNumberString.first.toString())
-        // 8954bxsqntndjmonenx5
+    fun mapToDigit(value: String?): String? {
+        return when (value) {
+            "one" -> "1"
+            "two" -> "2"
+            "three" -> "3"
+            "four" -> "4"
+            "five" -> "5"
+            "six" -> "6"
+            "seven" -> "7"
+            "eight" -> "8"
+            "nine" -> "9"
+            else -> value
+        }
     }
 
-    fun part1(input: List<String>): Int {
-        val numbers = listOf(
-            "1" to 1,
-            "2" to 2,
-            "3" to 3,
-            "4" to 4,
-            "5" to 5,
-            "6" to 6,
-            "7" to 7,
-            "8" to 8,
-            "9" to 9,
-        )
+    fun parseCalibrationValue(calibrationValue: String, pattern: String): Int {
+        val regex = Regex("(?=($pattern))")
+        val matches = regex.findAll(calibrationValue).toList()
+        var firstNumber = matches.first().groups[1]?.value
+        var lastNumber = matches.last().groups[1]?.value
 
-        return input.sumOf { firstAndLastDigit(it, numbers) }
+        firstNumber = mapToDigit(firstNumber)
+        lastNumber = mapToDigit(lastNumber)
+
+        return (firstNumber + lastNumber).toInt()
+    }
+
+
+    fun part1(input: List<String>): Int {
+        return input.sumOf { parseCalibrationValue(it, "[1-9]") }
     }
 
     fun part2(input: List<String>): Int {
-        val numbers = listOf(
-            "one" to 1,
-            "two" to 2,
-            "three" to 3,
-            "four" to 4,
-            "five" to 5,
-            "six" to 6,
-            "seven" to 7,
-            "eight" to 8,
-            "nine" to 9,
-            "1" to 1,
-            "2" to 2,
-            "3" to 3,
-            "4" to 4,
-            "5" to 5,
-            "6" to 6,
-            "7" to 7,
-            "8" to 8,
-            "9" to 9
-        )
-
-        return input.sumOf { firstAndLastDigit(it, numbers) }
+        return input.sumOf { parseCalibrationValue(it, "[1-9]|one|two|three|four|five|six|seven|eight|nine") }
     }
 
 
