@@ -12,7 +12,7 @@ day_formatted=$(printf '%2.2d' "$day")
 output_dir="src/day$day_formatted"
 input_file="$output_dir/day$day_formatted.txt"
 test_input_file="$output_dir/day${day_formatted}_test.txt"
-template_file="src/day01/Day01.kt"
+template_file="src/day00/Day00.kt"
 output_file="$output_dir/Day$day_formatted.kt"
 input_url="https://adventofcode.com/2023/day/$day/input"
 # The download is secured by a sessions cookie which is valid for about a month
