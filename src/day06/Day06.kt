@@ -13,13 +13,7 @@ fun main() {
     }
 
     fun calculateWinningConfigurations(time: Long, distance: Long): Int {
-        var winningConfigurations = 0
-        for (i in 1 until time) {
-            if (i * (time - i) > distance) {
-                winningConfigurations++
-            }
-        }
-        return winningConfigurations
+        return (1 until time).count { it * (time - it) > distance }
     }
 
     fun calculateWinningConfigurationsWithMath(time: Long, distance: Long): Int {
@@ -30,11 +24,11 @@ fun main() {
         // PQ-Formula:
         // -t/2 +- sqrt((t/2)^2 -d)
         val doubleTime = time.toDouble()
-        val doubleDistance = distance.toDouble()
+        val doubleDistance = distance.toDouble() + 0.0001 // you have to beat the distance so add a small delta
 
-        // crop to whole integers and use small margin to ensure that the value is actually over the distance and not euqal to it
-        val x1 = floor(0.5 * doubleTime + sqrt((doubleTime / 2.0).pow(2.0) - doubleDistance) - 0.001)
-        val x2 = ceil(0.5 * doubleTime - sqrt((doubleTime / 2.0).pow(2.0) - doubleDistance) + 0.001)
+        // crop to whole integers
+        val x1 = floor(0.5 * doubleTime + sqrt((doubleTime / 2.0).pow(2.0) - doubleDistance))
+        val x2 = ceil(0.5 * doubleTime - sqrt((doubleTime / 2.0).pow(2.0) - doubleDistance))
 
         return (x1 - x2).toInt() + 1
     }
