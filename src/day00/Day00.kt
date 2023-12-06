@@ -13,7 +13,6 @@ fun main() {
     }
 
 
-    // test if implementation meets criteria from the description, like:
     val testInput = readInput("day00/day00_test")
     check(part1(testInput) == 281)
 

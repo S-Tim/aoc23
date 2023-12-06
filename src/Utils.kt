@@ -70,3 +70,15 @@ fun printAsGrid(
     }
     println()
 }
+
+/**
+ * Splits a string by any number of whitespace between the numbers and then converts them.
+ * Also handles whitespace at the beginning and end.
+ */
+fun String.splitToInts(): List<Int> = this.trim().split("\\s+".toRegex()).map { it.toInt() }
+
+/**
+ * Splits a string by any number of whitespace between the numbers and then converts them.
+ * Also handles whitespace at the beginning and end.
+ */
+fun String.splitToLongs(): List<Long> = this.trim().split("\\s+".toRegex()).map { it.toLong() }

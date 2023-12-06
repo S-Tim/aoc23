@@ -2,82 +2,54 @@ package day05
 
 import println
 import readInput
-import kotlin.math.min
+import splitToLongs
 
 fun main() {
-    data class ConversionMapEntry(val destinationStart: Long, val sourceStart: Long, val range: Long) {
-        fun isInRange(value: Long): Boolean {
+    data class ConversionFunction(
+        private val destinationStart: Long, private val sourceStart: Long, private val range: Long
+    ) {
+        operator fun contains(value: Long): Boolean {
             return value in sourceStart until sourceStart + range
         }
 
-        fun mapValue(value: Long): Long {
+        operator fun invoke(value: Long): Long {
             return destinationStart + (value - sourceStart)
         }
     }
 
-    fun mapValue(value: Long, conversions: List<ConversionMapEntry>): Long {
-        for (conversion in conversions) {
-            if (conversion.isInRange(value)) {
-                return conversion.mapValue(value)
-            }
+    class ConversionMap(entries: List<List<Long>>) {
+        val entries: List<ConversionFunction> = entries.map { ConversionFunction(it[0], it[1], it[2]) }
+
+        operator fun get(value: Long): Long {
+            return entries.firstOrNull { value in it }?.let { it(value) } ?: value
         }
-        return value
     }
 
-    fun parseInput(input: List<String>): Pair<List<Long>, List<List<ConversionMapEntry>>> {
-        var seeds: List<Long> = listOf()
-        val conversionMaps: MutableList<List<ConversionMapEntry>> = mutableListOf()
+    fun parseInput(input: List<String>): Pair<List<Long>, List<ConversionMap>> {
+        val seeds: List<Long> = input[0].substringAfter(":").splitToLongs()
 
-        var currentMap: MutableList<ConversionMapEntry> = mutableListOf()
-        for (line in input) {
-            if (line.startsWith("seeds:")) {
-                seeds = line.substringAfter(": ").split(" ").map { it.toLong() }
-            }
-
-            if (line.isEmpty()) {
-                if (currentMap.isNotEmpty()) {
-                    conversionMaps.add(currentMap)
-                    currentMap = mutableListOf()
-                }
-            } else if (line[0].isLetter()) {
-//                println("Parsing $line")
-            } else {
-                val values = line.split(" ").map { it.toLong() }
-                currentMap.add(ConversionMapEntry(values[0], values[1], values[2]))
-            }
-        }
-        if (currentMap.isNotEmpty()) {
-            conversionMaps.add(currentMap)
-        }
+        // Drop the seed line then filter out the map headers and split the input into the maps
+        val maps = input.drop(2).filter { it.isEmpty() || it[0].isDigit() }.joinToString("\n") { it }.split("\n\n")
+        val conversionMaps = maps.map { map -> map.lines().map { it.splitToLongs() } }.map { ConversionMap(it) }
 
         return seeds to conversionMaps
     }
 
     fun part1(input: List<String>): Long {
         val (seeds, conversionMaps) = parseInput(input)
-
-        var currentValues = seeds.toMutableList()
-        for (conversionMap in conversionMaps) {
-            currentValues = currentValues.map { mapValue(it, conversionMap) }.toMutableList()
-        }
-
-        return currentValues.min()
+        return seeds.minOf { conversionMaps.fold(it) { acc, map -> map[acc] } }
     }
 
     fun part2(input: List<String>): Long {
         val (seeds, conversionMaps) = parseInput(input)
 
         var minValue = Long.MAX_VALUE
-        for (index in seeds.indices step 2) {
-            println("Checking seed: ${seeds[index]}")
-            val longRange = seeds[index] until seeds[index] + seeds[index + 1]
-            for (value in longRange) {
-                var currentValue = value
-                for (conversionMap in conversionMaps) {
-                    currentValue = mapValue(currentValue, conversionMap)
-                }
-                if (currentValue < minValue) {
-                    minValue = currentValue
+        for ((start, range) in seeds.windowed(2, 2)) {
+            println("Checking seed: $start with range $range")
+            for (value in start until start + range) {
+                val mappedValue = conversionMaps.fold(value) { acc, map -> map[acc] }
+                if (mappedValue < minValue) {
+                    minValue = mappedValue
                     println("New min value: $minValue")
                 }
             }
@@ -87,7 +59,6 @@ fun main() {
     }
 
 
-    // test if implementation meets criteria from the description, like:
     val testInput = readInput("day05/day05_test")
     check(part1(testInput) == 35L)
     check(part2(testInput) == 46L)

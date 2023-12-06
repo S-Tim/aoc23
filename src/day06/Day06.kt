@@ -2,13 +2,12 @@ package day06
 
 import println
 import readInput
-import java.lang.Math.pow
+import splitToLongs
 import kotlin.math.*
 
 fun main() {
-    fun parseInput(input: List<String>): Pair<List<Int>, List<Int>> {
-        val values = input.map { it.substringAfter(": ") }
-            .map { list -> list.split(" ").filter { it.isNotEmpty() }.map { it.trim().toInt() } }
+    fun parseInput(input: List<String>): Pair<List<Long>, List<Long>> {
+        val values = input.map { it.substringAfter(":").splitToLongs() }
         return values[0] to values[1]
     }
 
@@ -37,8 +36,8 @@ fun main() {
         val (times, distances) = parseInput(input)
 
         return times.zip(distances)
-            .map { calculateWinningConfigurationsWithMath(it.first.toLong(), it.second.toLong()) }
-            .reduceRight { i, acc -> i * acc }
+            .map { (time, distance) -> calculateWinningConfigurationsWithMath(time, distance) }
+            .reduce { acc, next -> acc * next }
     }
 
     fun part2(input: List<String>): Int {
