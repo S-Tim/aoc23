@@ -9,8 +9,7 @@ fun main() {
         protected open val cardValues = listOf('A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2')
 
         override fun compareTo(other: Hand): Int {
-            val winningOrder = listOf(
-                { h: Hand -> h.isNOfAKind(5) },
+            val winningOrder = listOf({ h: Hand -> h.isNOfAKind(5) },
                 { h: Hand -> h.isNOfAKind(4) },
                 { h: Hand -> h.isFullHouse() },
                 { h: Hand -> h.isNOfAKind(3) },
@@ -28,28 +27,22 @@ fun main() {
             }
         }
 
-        protected open fun isNOfAKind(value: Int): Boolean {
-            return cards.associateWith { card -> cards.count { it == card } }.any { (_, count) -> count == value }
-        }
+        private fun isNOfAKind(value: Int): Boolean = getCardCounts().any { (_, count) -> count == value }
+        private fun isHighCard(): Boolean = cards.distinct().size == 5
 
-        private fun isHighCard(): Boolean {
-            return cards.distinct().size == 5
-        }
-
-        protected open fun isFullHouse(): Boolean {
-            val cardCounts = cards.associateWith { card -> cards.count { it == card } }
+        private fun isFullHouse(): Boolean {
+            val cardCounts = getCardCounts()
             return cardCounts.containsValue(3) && cardCounts.containsValue(2)
         }
 
-        private fun isTwoPair(): Boolean {
-            val cardCounts = cards.associateWith { card -> cards.count { it == card } }
-            return cardCounts.values.count { it == 2 } == 2
-        }
+        private fun isTwoPair(): Boolean = getCardCounts().values.count { it == 2 } == 2
 
         private fun tieBreak(other: List<Char>): Int {
             val firstDifference = cards.zip(other).indexOfFirst { it.first != it.second }
             return cardValues.indexOf(other[firstDifference]) - cardValues.indexOf(cards[firstDifference])
         }
+
+        protected open fun getCardCounts(): Map<Char, Int> = cards.associateWith { card -> cards.count { it == card } }
 
         override fun toString(): String {
             return "${cards.joinToString("")} $bid"
@@ -60,21 +53,20 @@ fun main() {
         // Joker is the least valuable card in part 2
         override val cardValues = listOf('A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2', 'J')
 
-        override fun isNOfAKind(value: Int): Boolean {
-            return cards.associateWith { card -> cards.count { it == card || it == 'J' } }
-                .any { (_, count) -> count == value }
-        }
+        override fun getCardCounts(): Map<Char, Int> {
+            if (cards.all { it == 'J' }) {
+                return mapOf('A' to 5)
+            }
 
-        override fun isFullHouse(): Boolean {
+            val jokers = cards.count { it == 'J' }
             val cardCounts =
                 cards.filter { it != 'J' }.associateWith { card -> cards.count { it == card } }.toMutableMap()
 
             // Add jokers to the card that occurs most often
-            // This only works because the winning order is defined and a better hand would have been evaluated already
-            val key = cardCounts.maxBy { it.value }.key
-            cardCounts[key] = cardCounts[key]!! + cards.count { it == 'J' }
+            val key = cardCounts.maxByOrNull { it.value }?.key
+            key?.let { cardCounts[it] = (cardCounts[it] ?: 0) + jokers }
 
-            return cardCounts.containsValue(3) && cardCounts.containsValue(2)
+            return cardCounts
         }
     }
 
@@ -91,8 +83,8 @@ fun main() {
 
 
     val testInput = readInput("day07/day07_test")
-    check(part1(testInput),6440)
-    check(part2(testInput) , 5905)
+    check(part1(testInput), 6440)
+    check(part2(testInput), 5905)
 
     val input = readInput("day07/day07")
     part1(input).println()

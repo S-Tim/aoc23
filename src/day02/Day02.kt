@@ -4,42 +4,49 @@ import println
 import readInput
 
 fun main() {
-    fun parseRound(round: String): List<Pair<String, Int>> {
-        val rounds = round.split(",").map { it.trim() }
-        return rounds.map { it.split(" ")[1] to it.split(" ")[0].toInt() }
+    data class Cube(val color: String, val amount: Int)
+
+    data class Round(val cubes: List<Cube>) {
+        fun isPossible(): Boolean {
+            val maxValues = mapOf("red" to 12, "green" to 13, "blue" to 14)
+            return cubes.all { it.amount <= maxValues[it.color]!! }
+        }
     }
 
-    fun parseGame(game: String): Pair<Int, List<List<Pair<String, Int>>>> {
-        // Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
-        val gameId = Regex("Game (\\d+):").find(game)?.groupValues?.get(1)
-        val rounds = game.substringAfter(":").trim().split(";")
+    data class Game(val id: Int, val rounds: List<Round>) {
+        fun isPossible(): Boolean = rounds.all { it.isPossible() }
 
-        val result = rounds.map { parseRound(it) }
-        return gameId?.toInt()!! to result
+        fun requiredCubes(): List<Cube> {
+            return rounds
+                .flatMap { it.cubes }
+                .groupBy({ it.color }, { it.amount })
+                .map { Cube(it.key, it.value.max()) }
+        }
     }
 
-    fun isRoundPossible(round: List<Pair<String, Int>>): Boolean {
-        val maxValues = mapOf("red" to 12, "green" to 13, "blue" to 14)
-        return round.all { it.second <= maxValues[it.first]!! }
-    }
-
-    fun isGamePossible(game: List<List<Pair<String, Int>>>): Boolean {
-        return game.all { isRoundPossible(it) }
+    fun parseGames(games: List<String>): List<Game> {
+        return games
+            .map { it.substringAfter(": ") }
+            .map { game ->
+                game.split("; ")
+                    .map { round ->
+                        round.split(", ")
+                            .map { cube -> cube.split(" ") }
+                            .map { (amount, color) -> Cube(color, amount.toInt()) }
+                    }.map { Round(it) }
+            }.mapIndexed { index, game -> Game(index + 1, game) }
     }
 
 
     fun part1(input: List<String>): Int {
-        return input.map { parseGame(it) }.filter { isGamePossible(it.second) }.sumOf { it.first }
-    }
-
-    fun requiredCubesForGame(game: List<List<Pair<String, Int>>>): List<Pair<String, Int>> {
-        return game.flatten().groupBy({ value -> value.first }, { value -> value.second })
-            .map { it.key to it.value.max() }
+        return parseGames(input).filter { it.isPossible() }.sumOf { it.id }
     }
 
     fun part2(input: List<String>): Int {
-        return input.map { parseGame(it) }
-            .sumOf { game -> requiredCubesForGame(game.second).map { it.second }.reduceRight { a, b -> a * b } }
+        return parseGames(input).sumOf { game ->
+            game.requiredCubes().map { cube -> cube.amount }
+                .reduce { product, amount -> product * amount }
+        }
     }
 
 
