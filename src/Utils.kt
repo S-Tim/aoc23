@@ -82,3 +82,9 @@ fun String.splitToInts(): List<Int> = this.trim().split("\\s+".toRegex()).map { 
  * Also handles whitespace at the beginning and end.
  */
 fun String.splitToLongs(): List<Long> = this.trim().split("\\s+".toRegex()).map { it.toLong() }
+
+fun check(v1: Any, v2: Any) {
+    if (v1 != v2) {
+        throw IllegalStateException("Expected $v2 but was $v1")
+    }
+}

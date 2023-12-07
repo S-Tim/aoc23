@@ -1,5 +1,6 @@
 package day00
 
+import check
 import println
 import readInput
 
@@ -14,7 +15,7 @@ fun main() {
 
 
     val testInput = readInput("day00/day00_test")
-    check(part1(testInput) == 281)
+    check(part1(testInput), 281)
 
     val input = readInput("day00/day00")
     part1(input).println()
