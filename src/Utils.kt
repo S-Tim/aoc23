@@ -83,7 +83,7 @@ fun String.splitToInts(): List<Int> = this.trim().split("\\s+".toRegex()).map { 
  */
 fun String.splitToLongs(): List<Long> = this.trim().split("\\s+".toRegex()).map { it.toLong() }
 
-fun check(v1: Any, v2: Any) {
+fun <T> check(v1: T, v2: T) {
     if (v1 != v2) {
         throw IllegalStateException("Expected $v2 but was $v1")
     }
