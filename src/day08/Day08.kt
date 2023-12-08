@@ -43,7 +43,7 @@ fun main() {
         return mapNode("AAA", nodeMap, instructions) { it.value == "ZZZ" }
     }
 
-    fun findLCM(a: Long, b: Long): Long {
+    fun lcm(a: Long, b: Long): Long {
         val larger = if (a > b) a else b
         val maxLcm = a * b
         var lcm = larger
@@ -56,10 +56,10 @@ fun main() {
         return maxLcm
     }
 
-    fun findLCMOfListOfNumbers(numbers: List<Long>): Long {
+    fun lcm(numbers: List<Long>): Long {
         var result = numbers[0]
         for (i in 1 until numbers.size) {
-            result = findLCM(result, numbers[i])
+            result = lcm(result, numbers[i])
         }
         return result
     }
@@ -73,7 +73,7 @@ fun main() {
         val stepsToFinish =
             startingNodes.map { node -> mapNode(node.value, nodeMap, instructions) { it.value.endsWith("Z") } }
 
-        return findLCMOfListOfNumbers(stepsToFinish)
+        return lcm(stepsToFinish)
     }
 
 

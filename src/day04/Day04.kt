@@ -1,15 +1,14 @@
 package day04
 
+import check
 import println
 import readInput
+import splitToInts
 import kotlin.math.pow
 
 fun main() {
-    fun parseCard(card: String): Pair<Set<Int>, Set<Int>> {
-        val numbers = card.substringAfter(":").split(" | ").map { it.trim() }
-        val winning = numbers[0].split(" ").filter { it.isNotEmpty() }.map { it.toInt() }.toSet()
-        val actual = numbers[1].split(" ").filter { it.isNotEmpty() }.map { it.toInt() }.toSet()
-
+    fun String.toCard(): Pair<Set<Int>, Set<Int>> {
+        val (winning, actual) = this.substringAfter(": ").split(" | ").map { it.splitToInts().toSet() }
         return winning to actual
     }
 
@@ -18,18 +17,18 @@ fun main() {
     }
 
     fun part1(input: List<String>): Int {
-        return input.map { parseCard(it) }.sumOf { 2.0.pow(calculateWinningNumbers(it.first, it.second) - 1).toInt() }
+        return input.map { it.toCard() }
+            .sumOf { (winning, actual) -> 2.0.pow(calculateWinningNumbers(winning, actual) - 1).toInt() }
     }
 
     fun part2(input: List<String>): Int {
-        val numberOfOriginalCards = input.size
-        val cards = input.map { parseCard(it) }
-        val numberOfCards = (1..numberOfOriginalCards).associateWith { 1 }.toMutableMap()
+        val cards = input.map { it.toCard() }
+        val numberOfCards = (1..input.size).associateWith { 1 }.toMutableMap()
 
-        cards.forEachIndexed { index, numbers ->
-            val winningNumbers = calculateWinningNumbers(numbers.first, numbers.second)
+        cards.forEachIndexed { index, (winning, actual) ->
+            val winningNumbers = calculateWinningNumbers(winning, actual)
             (index + 1..index + winningNumbers).forEach {
-                numberOfCards[it + 1] = numberOfCards[it + 1]!! + 1 * numberOfCards[index + 1]!!
+                numberOfCards[it + 1] = numberOfCards[it + 1]!! + numberOfCards[index + 1]!!
             }
         }
 
@@ -38,8 +37,8 @@ fun main() {
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("day04/day04_test")
-    check(part1(testInput) == 13)
-    check(part2(testInput) == 30)
+    check(part1(testInput), 13)
+    check(part2(testInput), 30)
 
     val input = readInput("day04/day04")
     part1(input).println()
