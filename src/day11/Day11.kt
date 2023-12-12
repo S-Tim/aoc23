@@ -49,15 +49,16 @@ fun main() {
         return distances.values.sum()
     }
 
-    fun part2(input: List<String>): Long {
+    fun part2(input: List<String>, multiplier: Int = 1000000): Long {
         val (emptyRows, emptyCols, galaxies) = parseInput(input)
-        val distances: Map<Set<Point>, Long> = calculateDistances(emptyRows, emptyCols, galaxies, 1000000)
+        val distances: Map<Set<Point>, Long> = calculateDistances(emptyRows, emptyCols, galaxies, multiplier)
         return distances.values.sum()
     }
 
     val testInput = readInput("day11/day11_test")
     check(part1(testInput), 374)
-//    check(part2(testInput), 1030)
+    check(part2(testInput, 10), 1030)
+    check(part2(testInput, 100), 8410)
 
     val input = readInput("day11/day11")
     part1(input).println()
