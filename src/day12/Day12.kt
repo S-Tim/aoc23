@@ -31,11 +31,30 @@ fun main() {
         return expandSprings(springs.replaceFirst('?', '#')) + expandSprings(springs.replaceFirst('?', '.'))
     }
 
+    fun calcScore(springs: String, groups: List<Int>, seen: String, cache: MutableMap<String, Long>): Long {
+        if (seen in cache) {
+            return cache[seen]!!
+        }
+
+        if ('?' !in springs) {
+            return if (isValid(springs, groups)) 1 else 0
+        }
+
+        val s = springs.take(springs.indexOf('?'))
+        val score =
+            calcScore(springs.replaceFirst('?', '.'), groups, s, cache) +
+                    calcScore(springs.replaceFirst('?', '#'), groups, s, cache)
+        cache[s] = score
+
+        return score
+    }
 
     fun part1(input: List<String>): Int {
         val records = parseInput(input)
         val expanded = records.flatMap { (springs, groups) -> expandSprings(springs).map { it to groups } }
         return expanded.count { isValid(it.first, it.second) }
+//        return expanded.count { isValid(it.first, it.second) }
+//        return calcScore(records[0].first, records[0].second, records[0].first, mutableMapOf())
     }
 
     fun part2(input: List<String>): Int {
