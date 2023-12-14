@@ -1,118 +1,90 @@
 package day13
 
+import Point
 import check
 import println
 import readInput
 
 fun main() {
-    fun parseInput(input: List<String>): List<List<String>> {
-        return input.joinToString("\n").split("\n\n").map { it.split("\n") }
+    fun parseInput(input: List<String>): List<List<List<Char>>> {
+        return input.joinToString("\n").split("\n\n").map { it.split("\n").map { line -> line.toList() } }
     }
 
-    fun checkHorizontalSymmetry(pattern: List<String>, candidate: Pair<Int, Int>): Boolean {
-        for (i in 0..candidate.first) {
-            for (j in pattern[0].indices) {
-                val a = pattern.getOrNull(candidate.first - i)?.getOrNull(j)
-                val b = pattern.getOrNull(candidate.second + i)?.getOrNull(j)
-                if (a == null || b == null) return true
-                if (a != b) return false
-            }
-        }
-        return true
-    }
+    fun checkSymmetry(pairs: Sequence<Pair<Char?, Char?>>, expectedErrors: Int = 0): Boolean {
+        var errorCount = 0
 
-    fun checkVerticalSymmetry(pattern: List<String>, candidate: Pair<Int, Int>): Boolean {
-        for (i in 0..candidate.first) {
-            for (j in pattern.indices) {
-                val a = pattern.getOrNull(j)?.getOrNull(candidate.first - i)
-                val b = pattern.getOrNull(j)?.getOrNull(candidate.second + i)
-                if (a == null || b == null) return true
-                if (a != b) return false
-            }
-        }
-        return true
-    }
+        for ((a, b) in pairs) {
+            // if end of pattern is reached
+            if (a == null || b == null) return errorCount == expectedErrors
 
-    fun checkVerticalSymmetry2(pattern: List<String>, candidate: Pair<Int, Int>, initialErrors: Int = 0): Boolean {
-        var errorCount = initialErrors
-        for (i in 0..candidate.first) {
-            for (j in pattern.indices) {
-                val a = pattern.getOrNull(j)?.getOrNull(candidate.first - i)
-                val b = pattern.getOrNull(j)?.getOrNull(candidate.second + i)
-                if (a == null || b == null) return errorCount == 1
-                if (a != b) {
-                    errorCount += 1
-                    if (errorCount > 1) {
-                        return false
-                    }
+            // if the characters don't match
+            if (a != b) {
+                errorCount += 1
+                // short circuit
+                if (errorCount > expectedErrors) {
+                    return false
                 }
             }
         }
-        return errorCount == 1
+
+        return errorCount == expectedErrors
     }
 
-    fun checkHorizontalSymmetry2(pattern: List<String>, candidate: Pair<Int, Int>, initialErrors: Int = 0): Boolean {
-        var errorCount = initialErrors
-        for (i in 0..candidate.first) {
-            for (j in pattern[0].indices) {
-                val a = pattern.getOrNull(candidate.first - i)?.getOrNull(j)
-                val b = pattern.getOrNull(candidate.second + i)?.getOrNull(j)
-                if (a == null || b == null) return errorCount == 1
-                if (a != b) {
-                    errorCount += 1
-                    if (errorCount > 1) {
-                        return false
-                    }
+    val getVertical = fun(pattern: List<List<Char>>, candidate: Point): Sequence<Pair<Char?, Char?>> {
+        return sequence {
+            for (i in 0..candidate.first) {
+                for (j in pattern.indices) {
+                    val a = pattern.getOrNull(j)?.getOrNull(candidate.first - i)
+                    val b = pattern.getOrNull(j)?.getOrNull(candidate.second + i)
+                    yield(a to b)
                 }
             }
         }
-        return errorCount == 1
     }
 
-    fun hasSymmetry(pattern: List<String>): Int {
-        val horizontalResult = pattern.indices.windowed(2).filter { pattern[it.first()] == pattern[it.last()] }
-            .map { it.first() to it.last() }.filter { checkHorizontalSymmetry(pattern, it) }
-
-        val verticalResult = pattern[0].indices.windowed(2)
-            .filter { pattern.map { row -> row[it.first()] } == pattern.map { row -> row[it.last()] } }
-            .map { it.first() to it.last() }.filter { checkVerticalSymmetry(pattern, it) }
-
-        return horizontalResult.sumOf { (it.first + 1) * 100 } + verticalResult.sumOf { it.first + 1 }
+    val getHorizontal = fun(pattern: List<List<Char>>, candidate: Point): Sequence<Pair<Char?, Char?>> {
+        return sequence {
+            for (i in 0..candidate.first) {
+                for (j in pattern[0].indices) {
+                    val a = pattern.getOrNull(candidate.first - i)?.getOrNull(j)
+                    val b = pattern.getOrNull(candidate.second + i)?.getOrNull(j)
+                    yield(a to b)
+                }
+            }
+        }
     }
 
     fun differenceCount(a: List<Char>, b: List<Char>): Int {
-        return a.indices.count { a[it] != b[it] }
+        return a.zip(b).count { it.first != it.second }
     }
 
-    fun hasSymmetry2(pattern: List<String>): Int {
+    fun symmetryScore(pattern: List<List<Char>>, expectedErrors: Int = 0): Int {
         val horizontalResult = pattern.indices.windowed(2)
-            .map { it to differenceCount(pattern[it.first()].toList(), pattern[it.last()].toList()) }
-            .filter { it.second <= 1 }
-            .filter { checkHorizontalSymmetry2(pattern, it.first.first() to it.first.last(), 0) }
+            // horizontal candidates
+            .filter { (a, b) -> differenceCount(pattern[a], pattern[b]) <= expectedErrors }
+            .filter { (a, b) -> checkSymmetry(getHorizontal(pattern, a to b), expectedErrors) }
 
-        val verticalResult = pattern[0].indices.windowed(2).map {
-            it to differenceCount(pattern.map { row -> row[it.first()] },
-                pattern.map { row -> row[it.last()] })
-        }
-            .filter { it.second <= 1 }
-            .filter { checkVerticalSymmetry2(pattern, it.first.first() to it.first.last(), 0) }
+        val verticalResult = pattern[0].indices.windowed(2)
+            .filter { (a, b) ->
+                // vertical candidates
+                differenceCount(
+                    pattern.map { row -> row[a] },
+                    pattern.map { row -> row[b] }) <= expectedErrors
+            }
+            .filter { (a, b) -> checkSymmetry(getVertical(pattern, a to b), expectedErrors) }
 
-        return horizontalResult.sumOf { (it.first.first() + 1) * 100 } + verticalResult.sumOf { it.first.first() + 1 }
+        return horizontalResult.sumOf { (it.first() + 1) * 100 } + verticalResult.sumOf { it.first() + 1 }
     }
 
     fun part1(input: List<String>): Int {
         val patterns = parseInput(input)
-
-        val candidates = patterns.map { pattern -> hasSymmetry(pattern) }
-
+        val candidates = patterns.map { pattern -> symmetryScore(pattern) }
         return candidates.sum()
     }
 
     fun part2(input: List<String>): Int {
         val patterns = parseInput(input)
-
-        val candidates = patterns.map { pattern -> hasSymmetry2(pattern) }
-
+        val candidates = patterns.map { pattern -> symmetryScore(pattern, 1) }
         return candidates.sum()
     }
 
