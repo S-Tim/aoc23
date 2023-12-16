@@ -60,13 +60,13 @@ fun main() {
 
     fun symmetryScore(pattern: List<List<Char>>, expectedErrors: Int = 0): Int {
         val horizontalResult = pattern.indices.windowed(2)
-            // horizontal candidates
+            // horizontal candidates - TODO: ignore candidates, just check
             .filter { (a, b) -> differenceCount(pattern[a], pattern[b]) <= expectedErrors }
             .filter { (a, b) -> checkSymmetry(getHorizontal(pattern, a to b), expectedErrors) }
 
         val verticalResult = pattern[0].indices.windowed(2)
             .filter { (a, b) ->
-                // vertical candidates
+                // vertical candidates - TODO: ignore candidates, just check
                 differenceCount(
                     pattern.map { row -> row[a] },
                     pattern.map { row -> row[b] }) <= expectedErrors
