@@ -30,7 +30,7 @@ fun main() {
         return errorCount == expectedErrors
     }
 
-    val getVertical = fun(pattern: List<List<Char>>, candidate: Point): Sequence<Pair<Char?, Char?>> {
+    fun getVertical(pattern: List<List<Char>>, candidate: Point): Sequence<Pair<Char?, Char?>> {
         return sequence {
             for (i in 0..candidate.first) {
                 for (j in pattern.indices) {
@@ -42,7 +42,7 @@ fun main() {
         }
     }
 
-    val getHorizontal = fun(pattern: List<List<Char>>, candidate: Point): Sequence<Pair<Char?, Char?>> {
+    fun getHorizontal(pattern: List<List<Char>>, candidate: Point): Sequence<Pair<Char?, Char?>> {
         return sequence {
             for (i in 0..candidate.first) {
                 for (j in pattern[0].indices) {
@@ -54,23 +54,11 @@ fun main() {
         }
     }
 
-    fun differenceCount(a: List<Char>, b: List<Char>): Int {
-        return a.zip(b).count { it.first != it.second }
-    }
-
     fun symmetryScore(pattern: List<List<Char>>, expectedErrors: Int = 0): Int {
         val horizontalResult = pattern.indices.windowed(2)
-            // horizontal candidates - TODO: ignore candidates, just check
-            .filter { (a, b) -> differenceCount(pattern[a], pattern[b]) <= expectedErrors }
             .filter { (a, b) -> checkSymmetry(getHorizontal(pattern, a to b), expectedErrors) }
 
         val verticalResult = pattern[0].indices.windowed(2)
-            .filter { (a, b) ->
-                // vertical candidates - TODO: ignore candidates, just check
-                differenceCount(
-                    pattern.map { row -> row[a] },
-                    pattern.map { row -> row[b] }) <= expectedErrors
-            }
             .filter { (a, b) -> checkSymmetry(getVertical(pattern, a to b), expectedErrors) }
 
         return horizontalResult.sumOf { (it.first() + 1) * 100 } + verticalResult.sumOf { it.first() + 1 }
