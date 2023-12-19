@@ -2,30 +2,41 @@ package day17
 
 import Point
 import check
+import day17.Direction.EAST
+import day17.Direction.SOUTH
 import plus
 import println
 import readInput
 import java.util.PriorityQueue
 
 enum class Direction(val vector: Point) {
-    NORTH(-1 to 0), EAST(0 to 1), SOUTH(1 to 0), WEST(0 to -1)
+    NORTH(-1 to 0), EAST(0 to 1), SOUTH(1 to 0), WEST(0 to -1);
+
+    fun opposite(): Direction {
+        return when (this) {
+            NORTH -> SOUTH
+            EAST -> WEST
+            SOUTH -> NORTH
+            WEST -> EAST
+        }
+    }
 }
 
 fun main() {
-    data class Block(val position: Point, val direction: Direction, val movesInDirection: Int)
-
-    fun getNeighbors(block: Block, rows: Int, cols: Int, maxMovesInDirection: Int): List<Block> {
-        val neighbors = mutableListOf<Block>()
-        for (direction in Direction.values()) {
-            neighbors.add(
-                Block(
-                    (direction.vector + block.position),
-                    direction,
-                    if (direction == block.direction) block.movesInDirection + 1 else 1
-                )
-            )
+    data class Block(val position: Point, val direction: Direction, val movesInDirection: Int) {
+        fun neighbors(): List<Block> {
+            return Direction.values().mapNotNull { direction ->
+                if (direction == this.direction.opposite()) {
+                    null
+                } else {
+                    Block(
+                        direction.vector + position,
+                        direction,
+                        if (direction == this.direction) movesInDirection + 1 else 1
+                    )
+                }
+            }
         }
-        return neighbors.filter { it.position.first in 0 until rows && it.position.second in 0 until cols && it.movesInDirection <= maxMovesInDirection }
     }
 
     fun parseInput(input: List<String>): Map<Point, Int> {
@@ -33,74 +44,19 @@ fun main() {
             .toMap()
     }
 
-    fun calculateHeatLoss(
-        distances: Map<Block, Int>,
-        blockCosts: Map<Point, Int>,
-        parents: Map<Block, Block?>,
-        start: Point,
-        target: Point
+    fun solve(
+        input: List<String>,
+        start: Point = Point(0, 0),
+        target: Point = Point(input.size - 1, input[0].length - 1),
+        minMovesInDirection: Int = 0,
+        maxMovesInDirection: Int = 3
     ): Int {
-        var score = 0
-        var temp = distances.filter { it.key.position == target }.keys.first()
-        while (temp.position != start) {
-            score += blockCosts[temp.position]!!
-            temp = parents[temp]!!
-        }
-        return score
-    }
-
-    fun part1(input: List<String>): Int {
-        val mapSize = input.size
-        val blockCosts = parseInput(input)
-        val start = Block(Point(0, 0), Direction.WEST, 0)
-        val seen = mutableSetOf<Block>()
-        val distances = mutableMapOf<Block, Int>()
-        distances[start] = 0
-        val open = PriorityQueue(compareBy<Block> { distances[it] })
-        open.add(start)
-        val parents = mutableMapOf<Block, Block?>(start to null)
-
-        while (open.isNotEmpty()) {
-            val current = open.remove()
-
-            if (current in seen) {
-                continue
-            }
-            seen.add(current)
-
-            val neighbors =
-                getNeighbors(current, mapSize, mapSize, 3).filter { it.position != parents[current]?.position }
-
-            for (neighbor in neighbors) {
-                if (neighbor in seen) {
-                    continue
-                }
-                val newDistance = distances[current]!! + blockCosts[neighbor.position]!!
-                if (newDistance < (distances[neighbor] ?: Int.MAX_VALUE)) {
-                    distances[neighbor] = newDistance
-                    parents[neighbor] = current
-                }
-            }
-            open.addAll(neighbors)
-        }
-
-        return calculateHeatLoss(
-            distances,
-            blockCosts,
-            parents,
-            start.position,
-            Point(input.size - 1, input[0].length - 1)
-        )
-    }
-
-    fun part2(input: List<String>): Int {
         val rows = input.size
         val cols = input[0].length
         val blockCosts = parseInput(input)
 
-        val start1 = Block(Point(0, 0), Direction.EAST, 0)
-        val start2 = Block(Point(0, 0), Direction.SOUTH, 0)
-        val target = Point(rows - 1, cols - 1)
+        val start1 = Block(start, EAST, 0)
+        val start2 = Block(start, SOUTH, 0)
 
         val seen = mutableSetOf<Block>()
         val distances = mutableMapOf(start1 to 0, start2 to 0)
@@ -118,18 +74,18 @@ fun main() {
             }
             seen.add(current)
 
-            val neighbors =
-                getNeighbors(current, rows, cols, 10).filter { it.position != parents[current]?.position }
+            val neighbors = current.neighbors()
+                .filter { it.position.first in 0 until rows && it.position.second in 0 until cols && it.movesInDirection <= maxMovesInDirection }
 
             for (neighbor in neighbors) {
                 if (neighbor in seen) {
                     continue
                 }
-                val newDistance = distances[current]!! + blockCosts[neighbor.position]!!
-                if ((neighbor.direction == current.direction) || current.movesInDirection >= 4) {
-                    if (neighbor.position == target && neighbor.movesInDirection < 4) {
+                if ((neighbor.direction == current.direction) || current.movesInDirection >= minMovesInDirection) {
+                    if (neighbor.position == target && neighbor.movesInDirection < minMovesInDirection) {
                         continue
                     }
+                    val newDistance = distances[current]!! + blockCosts[neighbor.position]!!
                     if (newDistance < (distances[neighbor] ?: Int.MAX_VALUE)) {
                         distances[neighbor] = newDistance
                         parents[neighbor] = current
@@ -139,7 +95,17 @@ fun main() {
             }
         }
 
-        return calculateHeatLoss(distances, blockCosts, parents, start1.position, target)
+        val temp = distances.filter { it.key.position == target }.keys.first()
+        return generateSequence(temp) { parents[it]!! }.takeWhile { it.position != start }
+            .fold(0) { heatLoss, block -> heatLoss + blockCosts[block.position]!! }
+    }
+
+    fun part1(input: List<String>): Int {
+        return solve(input)
+    }
+
+    fun part2(input: List<String>): Int {
+        return solve(input, minMovesInDirection = 4, maxMovesInDirection = 10)
     }
 
 
