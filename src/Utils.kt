@@ -29,6 +29,10 @@ operator fun Pair<Int, Int>.minus(other: Pair<Int, Int>): Pair<Int, Int> {
     return Pair(first - other.first, second - other.second)
 }
 
+operator fun Pair<Int, Int>.times(factor: Int): Pair<Int, Int> {
+    return Pair(this.first * factor, this.second * factor)
+}
+
 typealias Point = Pair<Int, Int>
 
 /**
