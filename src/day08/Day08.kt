@@ -1,6 +1,7 @@
 package day08
 
 import check
+import lcm
 import println
 import readInput
 
@@ -41,27 +42,6 @@ fun main() {
         val nodeMap = nodes.associateBy { it.value }
 
         return mapNode("AAA", nodeMap, instructions) { it.value == "ZZZ" }
-    }
-
-    fun lcm(a: Long, b: Long): Long {
-        val larger = if (a > b) a else b
-        val maxLcm = a * b
-        var lcm = larger
-        while (lcm <= maxLcm) {
-            if (lcm % a == 0L && lcm % b == 0L) {
-                return lcm
-            }
-            lcm += larger
-        }
-        return maxLcm
-    }
-
-    fun lcm(numbers: List<Long>): Long {
-        var result = numbers[0]
-        for (i in 1 until numbers.size) {
-            result = lcm(result, numbers[i])
-        }
-        return result
     }
 
     fun part2(input: List<String>): Long {
