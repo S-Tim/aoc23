@@ -33,7 +33,12 @@ operator fun Pair<Int, Int>.times(factor: Int): Pair<Int, Int> {
     return Pair(this.first * factor, this.second * factor)
 }
 
+operator fun Triple<Int, Int, Int>.plus(other: Triple<Int, Int, Int>): Triple<Int, Int, Int> {
+    return Triple(first + other.first, second + other.second, third + other.third)
+}
+
 typealias Point = Pair<Int, Int>
+typealias Point3d = Triple<Int, Int, Int>
 
 /**
  * Prints a collection of points as a grid.
