@@ -11,59 +11,58 @@ fun main() {
         }
     }
 
-    fun isValid(springs: String, groups: List<Int>): Boolean {
-        val pattern = "#+".toRegex()
-        val matches = pattern.findAll(springs).map { it.value }.toList()
+    fun calculateScore(
+        springs: String,
+        groups: List<Int>,
+        currentPos: Int = 0,
+        currentGroup: Int = 0,
+        currentHashLength: Int = 0,
+        memoization: MutableMap<Triple<Int, Int, Int>, Long> = mutableMapOf()
+    ): Long {
+        val key = Triple(currentPos, currentGroup, currentHashLength)
+        if (key in memoization) {
+            return memoization[key]!!
+        }
 
-        if (matches.size != groups.size) return false
+        // If we are at the end of the springs
+        if (currentPos == springs.length) {
+            return if (currentGroup == groups.size && currentHashLength == 0) 1
+            else if (currentGroup == groups.size - 1 && groups.last() == currentHashLength) 1
+            else 0
+        }
 
-        for ((l1, l2) in groups.zip(matches.map { it.length })) {
-            if (l1 != l2) {
-                return false
+        var score = 0L
+        if (springs[currentPos] in ".?") {
+            if (currentHashLength == 0) {
+                score += calculateScore(springs, groups, currentPos + 1, currentGroup, currentHashLength, memoization)
+            }
+            if (currentHashLength > 0 && currentGroup < groups.size && groups[currentGroup] == currentHashLength) {
+                score += calculateScore(springs, groups, currentPos + 1, currentGroup + 1, 0, memoization)
             }
         }
-
-        return true
-    }
-
-    fun expandSprings(springs: String): List<String> {
-        if ('?' !in springs) return listOf(springs)
-        return expandSprings(springs.replaceFirst('?', '#')) + expandSprings(springs.replaceFirst('?', '.'))
-    }
-
-    fun calcScore(springs: String, groups: List<Int>, seen: String, cache: MutableMap<String, Long>): Long {
-        if (seen in cache) {
-            return cache[seen]!!
+        if (springs[currentPos] in "?#") {
+            score += calculateScore(springs, groups, currentPos + 1, currentGroup, currentHashLength + 1, memoization)
         }
 
-        if ('?' !in springs) {
-            return if (isValid(springs, groups)) 1 else 0
-        }
-
-        val s = springs.take(springs.indexOf('?'))
-        val score =
-            calcScore(springs.replaceFirst('?', '.'), groups, s, cache) +
-                    calcScore(springs.replaceFirst('?', '#'), groups, s, cache)
-        cache[s] = score
-
+        memoization[key] = score
         return score
     }
 
-    fun part1(input: List<String>): Int {
+    fun part1(input: List<String>): Long {
         val records = parseInput(input)
-        val expanded = records.flatMap { (springs, groups) -> expandSprings(springs).map { it to groups } }
-        return expanded.count { isValid(it.first, it.second) }
-//        return expanded.count { isValid(it.first, it.second) }
-//        return calcScore(records[0].first, records[0].second, records[0].first, mutableMapOf())
+        return records.sumOf { calculateScore(it.first, it.second) }
     }
 
-    fun part2(input: List<String>): Int {
-        return input.size
+    fun part2(input: List<String>): Long {
+        val records =
+            parseInput(input).map { List(5) { _ -> it.first }.joinToString("?") to List(5) { _ -> it.second }.flatten() }
+        return records.sumOf { calculateScore(it.first, it.second) }
     }
 
 
     val testInput = readInput("day12/day12_test")
     check(part1(testInput), 21)
+    check(part2(testInput), 525152)
 
     val input = readInput("day12/day12")
     part1(input).println()
